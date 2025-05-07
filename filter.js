@@ -1,31 +1,49 @@
+// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- Configuration ---
-    const skinCareSlug = "/product-category/skin-care/";
-    const hairCareSlug = "/product-category/hair-care/";
-    const personalCareSlug = "/product-category/personal-care/";
+    // Configuration for category identifiers and their corresponding filter classes
+    const categoryRules = [
+        {
+            slugIdentifier: "/product-category/skin-care/",
+            queryParamValue: "skin-care", // Value for 'product_cat'
+            filterClass: "benefits-and-uses-for-skin"
+        },
+        {
+            slugIdentifier: "/product-category/hair-care/",
+            queryParamValue: "hair-care",
+            filterClass: "benefits-and-uses-for-hair"
+        },
+        {
+            slugIdentifier: "/product-category/personal-care/",
+            queryParamValue: "personal-care",
+            filterClass: "benefits-and-uses-personal"
+        }
+        // Add more configurations here if needed
+    ];
 
-    const skinFilterClass = "benefits-and-uses-for-skin";
-    const hairFilterClass = "benefits-and-uses-for-hair";
-    const personalFilterClass = "benefits-and-uses-personal";
-    // --- End Configuration ---
+    const queryParamKey = "product_cat"; // The query parameter key we are looking for
 
-    // Get the filter elements
-    // Using querySelector as it's common for a filter section to be a single block
-    const skinFilterElement = document.querySelector('.' + skinFilterClass);
-    const hairFilterElement = document.querySelector('.' + hairFilterClass);
-    const personalFilterElement = document.querySelector('.' + personalFilterClass);
+    // Get all relevant filter elements based on the config
+    const filterElements = {};
+    categoryRules.forEach(rule => {
+        const element = document.querySelector('.' + rule.filterClass);
+        if (element) {
+            filterElements[rule.filterClass] = element;
+        } else {
+            console.warn(`Filter element with class "${rule.filterClass}" not found. This filter section cannot be controlled.`);
+        }
+    });
 
-    // Get the current page's path
+    // Get the current page's path and query string
     const currentPath = window.location.pathname;
+    const currentSearch = window.location.search;
+    const urlParams = new URLSearchParams(currentSearch);
+    const productCatQueryValue = urlParams.get(queryParamKey);
 
     // Helper function to show an element
     function showElement(element) {
         if (element) {
-            element.style.display = ''; // Or 'block', 'flex', etc. depending on its original display type
-                                        // '' will revert to its stylesheet-defined display property
-        } else {
-            // console.warn("Attempted to show a null element. Check class names.");
+            element.style.display = ''; // Revert to stylesheet-defined display (e.g., 'block', 'flex')
         }
     }
 
@@ -33,46 +51,42 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideElement(element) {
         if (element) {
             element.style.display = 'none';
-        } else {
-            // console.warn("Attempted to hide a null element. Check class names.");
         }
     }
 
-    // Initially hide all of them to ensure a clean state
-    hideElement(skinFilterElement);
-    hideElement(hairFilterElement);
-    hideElement(personalFilterElement);
-
-    // Logic to show/hide based on the slug
-    if (currentPath.includes(skinCareSlug)) {
-        console.log("Skin care category detected. Showing skin benefits filter.");
-        showElement(skinFilterElement);
-        // The others are already hidden by the initial hide, but explicit is okay too.
-        // hideElement(hairFilterElement);
-        // hideElement(personalFilterElement);
-    } else if (currentPath.includes(hairCareSlug)) {
-        console.log("Hair care category detected. Showing hair benefits filter.");
-        showElement(hairFilterElement);
-        // hideElement(skinFilterElement);
-        // hideElement(personalFilterElement);
-    } else if (currentPath.includes(personalCareSlug)) {
-        console.log("Personal care category detected. Showing personal benefits filter.");
-        showElement(personalFilterElement);
-        // hideElement(skinFilterElement);
-        // hideElement(hairFilterElement);
-    } else {
-        console.log("No specific product category for benefits filters detected. All relevant filters remain hidden.");
-        // All are already hidden by the initial step, so nothing more to do here.
-        // You could choose to show a default one or all if none of the paths match.
-        // For example, to show all if no specific category:
-        // showElement(skinFilterElement);
-        // showElement(hairFilterElement);
-        // showElement(personalFilterElement);
+    // Initially hide all configured filter elements
+    for (const key in filterElements) {
+        hideElement(filterElements[key]);
     }
 
-    // Optional: Log if any elements were not found, for debugging
-    if (!skinFilterElement) console.warn(`Element with class "${skinFilterClass}" not found.`);
-    if (!hairFilterElement) console.warn(`Element with class "${hairFilterClass}" not found.`);
-    if (!personalFilterElement) console.warn(`Element with class "${personalFilterClass}" not found.`);
+    // Determine which filter to show
+    let activeFilterClass = null;
 
+    for (const rule of categoryRules) {
+        let match = false;
+        // Check for slug identifier in the path
+        if (currentPath.includes(rule.slugIdentifier)) {
+            match = true;
+            console.log(`Path match for: ${rule.slugIdentifier}`);
+        }
+        // Check for query parameter match
+        if (productCatQueryValue && productCatQueryValue === rule.queryParamValue) {
+            match = true;
+            console.log(`Query param match for: ${queryParamKey}=${rule.queryParamValue}`);
+        }
+
+        if (match) {
+            activeFilterClass = rule.filterClass;
+            break; // Found the relevant category, no need to check further
+        }
+    }
+
+    if (activeFilterClass && filterElements[activeFilterClass]) {
+        showElement(filterElements[activeFilterClass]);
+        console.log(`Showing filter: ${activeFilterClass}`);
+    } else {
+        console.log("No specific product category identifier (slug or query param) detected for benefits filters. All relevant filters remain hidden.");
+        // If you want a default behavior (e.g., show all or a specific one if no path matches),
+        // you can add that logic here.
+    }
 });
