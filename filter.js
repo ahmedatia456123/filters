@@ -1,6 +1,6 @@
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-
+console.log("filtering")
     // Configuration for category identifiers and their corresponding filter classes
     const categoryRules = [
         {
