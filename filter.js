@@ -1,6 +1,6 @@
 (function() { // IIFE to avoid polluting global scope
     'use strict';
-
+console.log("Filtering")
     // --- Configuration ---
     const categoryRules = [
         {
